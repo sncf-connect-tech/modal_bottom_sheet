@@ -1,26 +1,27 @@
-import 'package:flutter/material.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+
 /// Shows a modal material design bottom sheet.
-Future<T?> showMaterialModalBottomSheet<T>({
-  required BuildContext context,
-  double? closeProgressThreshold,
-  required WidgetBuilder builder,
-  Color? backgroundColor,
-  double? elevation,
-  ShapeBorder? shape,
-  Clip? clipBehavior,
-  Color? barrierColor,
-  bool bounce = false,
-  bool expand = false,
-  AnimationController? secondAnimation,
-  Curve? animationCurve,
-  bool useRootNavigator = false,
-  bool isDismissible = true,
-  bool enableDrag = true,
-  Duration? duration,
-}) async {
+Future<T?> showMaterialModalBottomSheet<T>(
+    {required BuildContext context,
+    double? closeProgressThreshold,
+    required WidgetBuilder builder,
+    Color? backgroundColor,
+    double? elevation,
+    ShapeBorder? shape,
+    Clip? clipBehavior,
+    Color? barrierColor,
+    bool bounce = false,
+    bool expand = false,
+    AnimationController? secondAnimation,
+    Curve? animationCurve,
+    bool useRootNavigator = false,
+    bool isDismissible = true,
+    bool enableDrag = true,
+    Duration? duration,
+    CustomNavigationMethod<T> customNavigationMethod}) async {
   assert(context != null);
   assert(builder != null);
   assert(expand != null);
@@ -29,8 +30,7 @@ Future<T?> showMaterialModalBottomSheet<T>({
   assert(enableDrag != null);
   assert(debugCheckHasMediaQuery(context));
   assert(debugCheckHasMaterialLocalizations(context));
-  final result = await Navigator.of(context, rootNavigator: useRootNavigator)
-      .push(ModalBottomSheetRoute<T>(
+  ModalBottomSheetRoute<T> route = ModalBottomSheetRoute<T>(
     builder: builder,
     closeProgressThreshold: closeProgressThreshold,
     containerBuilder: _materialContainerBuilder(
@@ -50,35 +50,26 @@ Future<T?> showMaterialModalBottomSheet<T>({
     enableDrag: enableDrag,
     animationCurve: animationCurve,
     duration: duration,
-  ));
+  );
+  final result = await customNavigationMethod != null
+      ? customNavigationMethod!(route)
+      : Navigator.of(context, rootNavigator: useRootNavigator).push(route);
   return result;
 }
 
 //Default container builder is the Material Appearance
 WidgetWithChildBuilder _materialContainerBuilder(BuildContext context,
-    {Color? backgroundColor,
-    double? elevation,
-    ThemeData? theme,
-    Clip? clipBehavior,
-    ShapeBorder? shape}) {
+    {Color? backgroundColor, double? elevation, ThemeData? theme, Clip? clipBehavior, ShapeBorder? shape}) {
   final bottomSheetTheme = Theme.of(context).bottomSheetTheme;
-  final color = backgroundColor ??
-      bottomSheetTheme.modalBackgroundColor ??
-      bottomSheetTheme.backgroundColor;
+  final color = backgroundColor ?? bottomSheetTheme.modalBackgroundColor ?? bottomSheetTheme.backgroundColor;
   final _elevation = elevation ?? bottomSheetTheme.elevation ?? 0.0;
   final _shape = shape ?? bottomSheetTheme.shape;
-  final _clipBehavior =
-      clipBehavior ?? bottomSheetTheme.clipBehavior ?? Clip.none;
+  final _clipBehavior = clipBehavior ?? bottomSheetTheme.clipBehavior ?? Clip.none;
 
-  final result = (context, animation, child) => Material(
-      color: color,
-      elevation: _elevation,
-      shape: _shape,
-      clipBehavior: _clipBehavior,
-      child: child);
+  final result = (context, animation, child) =>
+      Material(color: color, elevation: _elevation, shape: _shape, clipBehavior: _clipBehavior, child: child);
   if (theme != null) {
-    return (context, animation, child) =>
-        Theme(data: theme, child: result(context, animation, child));
+    return (context, animation, child) => Theme(data: theme, child: result(context, animation, child));
   } else {
     return result;
   }
